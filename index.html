@@ -1,0 +1,1074 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#46273F">
+<meta name="description" content="Conthay — apoio de registro de refeições e macronutrientes para pessoas com diabetes.">
+<title>Conthay</title>
+<link rel="manifest" href='data:application/manifest+json,{"name":"Conthay","short_name":"Conthay","start_url":".","display":"standalone","background_color":"%23FBF4F7","theme_color":"%2346273F","icons":[]}'>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+    :root{
+    --ink:#46273F; --ink-2:#5E3253;
+    --teal:#C94E78; --teal-d:#A8385F;      /* acento rosé — nome mantido p/ nao quebrar referencias */
+    --surface:#FBF4F7; --card:#FFFFFF; --line:#EFDFE6;
+    --txt:#2A1A26; --txt-2:#7A6470; --txt-3:#A892A0;
+    --ok:#2F8F5B; --ok-bg:#E7F3EC;
+    --warn:#B45309; --warn-bg:#FBEFDD;
+    --bad:#C02748; --bad-bg:#FBE7EC;
+    --radius:18px;
+    --shadow:0 1px 2px rgba(70,39,63,.07),0 10px 28px rgba(70,39,63,.08);
+    --disp:'Raleway',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --tap:48px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--surface);color:var(--txt);
+    font-size:16px;line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  .brand,h1,h2,h3,.eyebrow,.hero .lab,.sheet h2{font-family:var(--disp)}
+  .brand{font-weight:800;letter-spacing:.02em}
+  button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit}
+  input,select,textarea{font-family:inherit;font-size:16px}
+  h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.015em}
+  a{color:var(--teal-d)}
+
+  /* ---- shell ---- */
+  #app{max-width:520px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;position:sticky;top:0;background:var(--surface);z-index:30}
+  .brand{display:flex;align-items:center;gap:9px;font-weight:800;letter-spacing:-.02em;font-size:18px}
+  .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 4px rgba(201,78,120,.20)}
+  .topdate{font-size:13px;color:var(--txt-2);text-transform:capitalize}
+  main{flex:1;padding:4px 18px 120px}
+
+  /* ---- bottom nav ---- */
+  .nav{position:fixed;bottom:0;left:0;right:0;max-width:520px;margin:0 auto;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;padding:6px 6px calc(6px + env(safe-area-inset-bottom));z-index:40}
+  .nav button{flex:1;min-height:var(--tap);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:11px;color:var(--txt-3);border-radius:12px;padding:6px 2px}
+  .nav button.on{color:var(--teal-d)}
+  .nav .ic{font-size:19px;line-height:1}
+
+  /* ---- cards / metric ---- */
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--txt-3);margin:18px 2px 8px}
+  .hero{background:linear-gradient(150deg,#46273F 0%,#7A3A5E 58%,#A24A73 100%);color:#F8E9F0;border-radius:20px;padding:20px 20px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(201,78,120,.34),transparent 70%)}
+  .hero .lab{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#E4B9CC;font-weight:700}
+  .hero .big{font-size:54px;font-weight:800;line-height:1.02;margin:2px 0}
+  .hero .big small{font-size:22px;font-weight:700;color:#DBA9C1;margin-left:4px}
+  .hero .sub{display:flex;gap:18px;margin-top:8px;font-size:13.5px;color:#E8C5D6;position:relative;z-index:1}
+  .hero .sub b{color:#fff}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+  .mcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 12px 11px}
+  .mcard .k{font-size:11.5px;color:var(--txt-2);font-weight:600}
+  .mcard .v{font-size:22px;font-weight:800;margin-top:1px}
+  .mcard .u{font-size:12px;color:var(--txt-3);font-weight:600;margin-left:2px}
+
+  /* ---- buttons ---- */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--tap);padding:0 18px;border-radius:14px;font-weight:700;font-size:16px;width:100%;transition:transform .04s,filter .15s}
+  .btn:active{transform:scale(.985)}
+  .btn-primary{background:var(--teal);color:#fff}
+  .btn-primary:active{filter:brightness(.95)}
+  .btn-dark{background:var(--ink);color:#fff}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--txt)}
+  .btn-soft{background:var(--ok-bg);color:var(--ok)}
+  .btn-sm{min-height:40px;font-size:14px;padding:0 14px;width:auto}
+  .row{display:flex;gap:10px}
+  .add-cta{margin-top:14px}
+
+  /* ---- lists ---- */
+  .item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-top:8px;display:flex;align-items:center;gap:12px}
+  .item .grow{flex:1;min-width:0}
+  .item .t{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .d{font-size:12.5px;color:var(--txt-2);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .item .carb{text-align:right;font-weight:800;font-size:17px;white-space:nowrap}
+  .item .carb small{font-size:11px;color:var(--txt-3);display:block;font-weight:600}
+  .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:#EEF3F2;color:var(--txt-2)}
+  .meal-pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--ink);color:#ECCBDC}
+
+  /* confiança */
+  .conf{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px}
+  .conf.h{background:var(--ok-bg);color:var(--ok)}
+  .conf.m{background:var(--warn-bg);color:var(--warn)}
+  .conf.l{background:var(--bad-bg);color:var(--bad)}
+
+  /* ---- forms ---- */
+  .field{margin-top:14px}
+  .field>label{display:block;font-size:13px;font-weight:700;color:var(--txt-2);margin-bottom:6px}
+  .inp{width:100%;min-height:var(--tap);border:1px solid var(--line);border-radius:12px;padding:0 14px;background:#fff;color:var(--txt)}
+  textarea.inp{padding:12px 14px;min-height:96px;line-height:1.4;resize:vertical}
+  .inp:focus,select.inp:focus,textarea.inp:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:transparent}
+  .help{font-size:12px;color:var(--txt-3);margin-top:6px}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:84px;min-height:44px;border:1px solid var(--line);border-radius:12px;background:#fff;font-weight:700;font-size:14px;color:var(--txt-2)}
+  .seg button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .quick{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px}
+  .quick button{border:1px solid var(--line);background:#fff;border-radius:999px;min-height:38px;padding:0 13px;font-size:13px;font-weight:600;color:var(--txt)}
+  .quick button.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+  /* ---- tabs (adicionar) ---- */
+  .tabs{display:flex;gap:6px;background:#EBF1F0;padding:5px;border-radius:14px;margin-top:6px;overflow-x:auto}
+  .tabs button{flex:1;min-width:max-content;white-space:nowrap;min-height:40px;border-radius:10px;font-weight:700;font-size:13.5px;color:var(--txt-2);padding:0 12px}
+  .tabs button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.06)}
+
+  /* ---- draft total bar ---- */
+  .draftbar{position:fixed;bottom:calc(64px + env(safe-area-inset-bottom));left:0;right:0;max-width:520px;margin:0 auto;padding:0 18px;z-index:35}
+  .draftbar .inner{background:var(--ink);color:#fff;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 10px 30px rgba(12,47,51,.25)}
+  .draftbar .tot{flex:1}
+  .draftbar .tot .a{font-size:12px;color:#DBA9C1;font-weight:700}
+  .draftbar .tot .b{font-size:19px;font-weight:800}
+
+  /* ---- safety banners ---- */
+  .safety{font-size:12.5px;color:var(--txt-2);background:#fff;border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-top:14px;line-height:1.4}
+  .safety b{color:var(--ink)}
+  .alert{border-radius:12px;padding:12px 14px;margin-top:12px;font-size:13.5px;line-height:1.45;font-weight:600}
+  .alert.warn{background:var(--warn-bg);color:#7c3a00;border:1px solid #f0d6a8}
+  .alert.bad{background:var(--bad-bg);color:#7f1d1d;border:1px solid #f0bcbc}
+  .alert.info{background:#E7F0F4;color:#0d3b52;border:1px solid #bcd6e3}
+  .footer-note{font-size:11.5px;color:var(--txt-3);text-align:center;padding:18px 6px 8px;line-height:1.5}
+
+  /* ---- modal / sheet ---- */
+  .overlay{position:fixed;inset:0;background:rgba(8,28,30,.55);z-index:100;display:flex;align-items:flex-end;justify-content:center;padding:0}
+  .overlay.center{align-items:center;padding:18px}
+  .sheet{background:#fff;width:100%;max-width:520px;border-radius:22px 22px 0 0;padding:18px 18px calc(20px + env(safe-area-inset-bottom));max-height:92vh;overflow:auto;animation:up .22s ease}
+  .sheet.card{border-radius:20px;max-width:460px}
+  @keyframes up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+  .sheet .grab{width:38px;height:4px;border-radius:99px;background:#D6E0DE;margin:0 auto 12px}
+  .sheet h2{font-size:19px;margin-bottom:4px}
+  .preview{display:flex;gap:14px;background:var(--surface);border-radius:14px;padding:12px 14px;margin-top:14px}
+  .preview .p{flex:1}
+  .preview .p .pk{font-size:11px;color:var(--txt-2);font-weight:700}
+  .preview .p .pv{font-size:19px;font-weight:800}
+
+  /* ---- viz ---- */
+  .bars{display:flex;align-items:flex-end;gap:7px;height:130px;padding:10px 4px 0;border-bottom:1px solid var(--line)}
+  .bars .col{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0}
+  .bars .bar{width:70%;max-width:26px;background:var(--teal);border-radius:6px 6px 0 0;min-height:3px;transition:height .3s}
+  .bars .bl{font-size:10px;color:var(--txt-3);white-space:nowrap}
+  .bars .bv{font-size:10px;color:var(--txt-2);font-weight:700}
+
+  .muted{color:var(--txt-2)}
+  .empty{text-align:center;color:var(--txt-3);padding:26px 14px;font-size:14px}
+  .pagehead{display:flex;align-items:center;gap:10px;margin:8px 0 2px}
+  .pagehead h1{font-size:24px}
+  .back{min-width:40px;min-height:40px;border-radius:12px;background:#fff;border:1px solid var(--line);font-size:20px;display:flex;align-items:center;justify-content:center}
+  hr.sep{border:0;border-top:1px solid var(--line);margin:16px 0}
+  .pillrow{display:flex;gap:7px;flex-wrap:wrap}
+  .danger{color:var(--bad)}
+  label.check{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--txt);padding:6px 0}
+  label.check input{width:22px;height:22px;accent-color:var(--teal)}
+  .kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+  .kv:last-child{border-bottom:0}
+  .kv .kk{color:var(--txt-2)}
+  .kv .vv{font-weight:700}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span>Conthay</div>
+    <div class="topdate num" id="topdate"></div>
+  </div>
+  <main id="view"></main>
+  <nav class="nav" id="nav"></nav>
+</div>
+<div id="modal"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   Conthay — MVP single-file PWA (local-first)
+   Apoio de REGISTRO. Não diagnostica, não prescreve, não calcula dose.
+   ============================================================ */
+
+/* ---------- FLAGS & TEXTOS DE SEGURANÇA ---------- */
+const FLAGS = {
+  ENABLE_BOLUS_CALCULATOR: false, // NUNCA true no MVP. Dose real exige validação clínica/regulatória.
+};
+const SAFETY = {
+  base: "Use este aplicativo como apoio de registro e converse com sua equipe de saúde para decisões de tratamento.",
+  insulin: "O app mostra carboidratos estimados. Use apenas a razão insulina/carboidrato prescrita pelo seu profissional de saúde.",
+  estimate: "Estimativa: revise a porção e os valores antes de confirmar.",
+  glucoseExtreme: "Verifique seu plano de ação orientado por profissional de saúde. Em sintomas graves ou emergência, procure atendimento imediatamente.",
+};
+
+/* ---------- STORAGE (localStorage atrás de uma camada trocável) ----------
+   Migração futura p/ IndexedDB/Supabase: trocar só este objeto. */
+const DB_KEY = "conthay.v1";
+const Store = {
+  _data: null,
+  _empty(){ return { profile:null, foods:[], meals:[], glucose:[], favorites:[], audit:[] }; },
+  load(){
+    if(this._data) return this._data;
+    try{ const raw = localStorage.getItem(DB_KEY); this._data = raw ? JSON.parse(raw) : this._empty(); }
+    catch(e){ this._data = this._empty(); }
+    return this._data;
+  },
+  save(){ try{ localStorage.setItem(DB_KEY, JSON.stringify(this._data)); }catch(e){ alert("Sem espaço para salvar localmente."); } },
+  audit(type, payload){ this.load().audit.push({ id:uid(), eventType:type, createdAt:now(), source:"app" }); /* payload não logado p/ privacidade */ this.save(); },
+  reset(){ this._data = this._empty(); this.save(); },
+};
+
+/* ---------- UTIL ---------- */
+const uid = () => Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+const now = () => new Date().toISOString();
+const round1 = n => Math.round((Number(n)||0)*10)/10;
+const fmt = n => round1(n).toLocaleString("pt-BR");
+const todayKey = d => (d?new Date(d):new Date()).toLocaleDateString("sv-SE"); // YYYY-MM-DD
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+function confLevel(c){ return c>=0.8 ? "h" : c>=0.5 ? "m" : "l"; }
+function confLabel(c){ return {h:"Confiança alta",m:"Confiança média",l:"Confiança baixa"}[confLevel(c)]; }
+function confIcon(c){ return {h:"●",m:"◐",l:"○"}[confLevel(c)]; }
+function confTag(c){ const lv=confLevel(c); return `<span class="conf ${lv}">${confIcon(c)} ${confLabel(c)}</span>`; }
+const MEAL_LABELS = {breakfast:"Café",lunch:"Almoço",dinner:"Jantar",snack:"Lanche",other:"Outro"};
+function suggestMealType(){ const h=new Date().getHours(); if(h<10)return"breakfast"; if(h<14)return"lunch"; if(h<18)return"snack"; if(h<22)return"dinner"; return"snack"; }
+
+/* ============================================================
+   FUNÇÕES PURAS DE CÁLCULO (testáveis)
+   ============================================================ */
+function calculateItemMacros(food, grams){
+  const g = Number(grams)||0;
+  return {
+    carbs:   round1((food.carbsPer100g||0)*g/100),
+    protein: round1((food.proteinPer100g||0)*g/100),
+    fat:     round1((food.fatPer100g||0)*g/100),
+    fiber:   round1((food.fiberPer100g||0)*g/100),
+    calories:round1((food.caloriesPer100g||0)*g/100),
+  };
+}
+function calculateMealTotals(items, carbChoiceGrams){
+  const ccg = Number(carbChoiceGrams)||15;
+  const t = items.reduce((a,it)=>({
+    carbs:a.carbs+(it.carbs||0), protein:a.protein+(it.protein||0),
+    fat:a.fat+(it.fat||0), fiber:a.fiber+(it.fiber||0), calories:a.calories+(it.calories||0),
+  }),{carbs:0,protein:0,fat:0,fiber:0,calories:0});
+  // confiança ponderada por gramas (itens maiores pesam mais)
+  const wsum = items.reduce((s,it)=>s+(it.gramsEquivalent||0),0);
+  const conf = wsum>0
+    ? items.reduce((s,it)=>s+(it.confidenceScore||0)*(it.gramsEquivalent||0),0)/wsum
+    : (items.length ? items.reduce((s,it)=>s+(it.confidenceScore||0),0)/items.length : 1);
+  return {
+    totalCarbs:round1(t.carbs), totalProtein:round1(t.protein), totalFat:round1(t.fat),
+    totalFiber:round1(t.fiber), totalCalories:round1(t.calories),
+    carbChoices:round1(t.carbs/ccg),
+    confidenceScore:Math.round(conf*100)/100,
+  };
+}
+function calculateNetCarbs(totalCarbs, fiber){ return Math.max(round1((totalCarbs||0)-(fiber||0)),0); }
+
+/* conversão porção -> gramas (medidas BR). Retorna {grams, confidence, needsConfirm}. */
+function convertPortionToGrams(food, quantity, unit){
+  const q = Number(quantity)||0;
+  // pesos médios por medida — APROXIMADOS, baixa confiança quando dependem do alimento
+  const generic = { tbsp:15, tsp:5, cup:120, slice:25, unit:50 };
+  if(unit==="g"||unit==="ml") return { grams:q, confidence:0.95, needsConfirm:false };
+  if(unit==="serving"){
+    if(food.gramsPerServing) return { grams:q*food.gramsPerServing, confidence:0.85, needsConfirm:false };
+    return { grams:q*100, confidence:0.4, needsConfirm:true };
+  }
+  if(unit in generic){
+    const per = food.gramsPerServing && (unit==="unit"||unit==="slice") ? food.gramsPerServing : generic[unit];
+    const known = food.gramsPerServing && (unit==="unit"||unit==="slice");
+    return { grams:q*per, confidence: known?0.7:0.45, needsConfirm:!known };
+  }
+  return { grams:q, confidence:0.4, needsConfirm:true };
+}
+
+/* Parser de linguagem natural simples (regex). Retorna itens PENDENTES de confirmação. */
+const NUM_WORDS = {um:1,uma:1,dois:2,duas:2,tres:3,"três":3,quatro:4,cinco:5,seis:6,meia:0.5,meio:0.5};
+const UNIT_WORDS = [
+  [/\b(fatias?|ft)\b/,"slice"],[/\b(colheres?\s+de\s+sopa|c\.?\s*sopa|cs)\b/,"tbsp"],
+  [/\b(colheres?\s+de\s+ch[áa]|c\.?\s*ch[áa]|cc)\b/,"tsp"],[/\b(x[íi]caras?|xic)\b/,"cup"],
+  [/\b(copos?)\b/,"cup"],[/\b(unidades?|und?)\b/,"unit"],[/\b(g|gramas?)\b/,"g"],[/\b(ml)\b/,"ml"],
+];
+function naturalLanguageMealParser(text, foods){
+  const parts = String(text||"").toLowerCase().split(/,|\be\b|\+|\n/).map(s=>s.trim()).filter(Boolean);
+  return parts.map(chunk=>{
+    let qty=1, unit="serving";
+    const mNum = chunk.match(/(\d+[.,]?\d*)/);
+    if(mNum) qty = parseFloat(mNum[1].replace(",","."));
+    else { for(const w in NUM_WORDS){ if(new RegExp("\\b"+w+"\\b").test(chunk)){ qty=NUM_WORDS[w]; break; } } }
+    for(const [re,u] of UNIT_WORDS){ if(re.test(chunk)){ unit=u; break; } }
+    // nome = chunk sem números/unidades/stopwords
+    let name = chunk
+      .replace(/(\d+[.,]?\d*)/g,"")
+      .replace(/\b(de|da|do|com|sem|a|o|as|os|comi|um|uma|dois|duas|tres|três|quatro|cinco|fatias?|colheres?|sopa|ch[áa]|x[íi]caras?|copos?|unidades?|und?|g|gramas?|ml)\b/g,"")
+      .replace(/\s+/g," ").trim();
+    const match = name ? findFoodByName(name, foods) : null;
+    return { rawText:chunk, name:name||chunk, qty, unit, match, userConfirmed:false };
+  });
+}
+function findFoodByName(name, foods){
+  const n = name.toLowerCase();
+  let best=null, bestScore=0;
+  for(const f of foods){
+    const fn=f.name.toLowerCase();
+    let score=0;
+    if(fn===n) score=1;
+    else if(fn.includes(n)||n.includes(fn)) score=0.7;
+    else { const w=n.split(" ").filter(x=>x.length>2); const hit=w.filter(x=>fn.includes(x)).length; if(w.length)score=0.5*hit/w.length; }
+    if(score>bestScore){ bestScore=score; best=f; }
+  }
+  return bestScore>=0.45 ? best : null;
+}
+
+/* ============================================================
+   PROVEDORES DE DADOS NUTRICIONAIS
+   Interface comum: search / getById. ManualProvider + LocalSeed ativos.
+   USDA / Brazilian (TACO/TBCA) / Barcode = adaptadores isolados (stub) p/ fase 2.
+   ============================================================ */
+// Sementes: VALORES APROXIMADOS p/ DEMONSTRAÇÃO. Verifique na TACO/TBCA antes de usar clinicamente.
+const SEED_FOODS = [
+  ["Arroz branco cozido",28.1,2.5,0.2,1.6,128],["Arroz integral cozido",25.8,2.6,1.0,2.7,124],
+  ["Feijão carioca cozido",13.6,4.8,0.5,8.5,76],["Feijão preto cozido",14.0,4.5,0.5,8.4,77],
+  ["Pão francês",58.6,8.0,3.1,2.3,300],["Pão de forma integral",43.9,9.4,3.5,6.9,253],
+  ["Macarrão cozido",30.0,5.0,1.1,1.8,158],["Mandioca cozida",30.1,0.6,0.3,1.6,125],
+  ["Batata cozida",11.9,1.2,0.1,1.3,52],["Batata doce cozida",18.4,0.6,0.1,2.2,77],
+  ["Ovo de galinha cozido",0.6,13.3,9.5,0,146],["Peito de frango grelhado",0,32.0,2.5,0,159],
+  ["Carne bovina (patinho) cozida",0,35.9,7.3,0,219],["Banana prata",26.0,1.3,0.1,2.0,98],
+  ["Maçã",13.3,0.3,0.4,2.0,56],["Mamão formosa",10.4,0.8,0.1,1.8,45],
+  ["Laranja pera",8.9,1.0,0.1,0.8,37],["Leite integral",4.8,3.2,3.5,0,61],
+  ["Leite desnatado",4.9,3.4,0.2,0,35],["Iogurte natural integral",4.7,3.5,3.3,0,61],
+  ["Queijo mussarela",3.4,22.7,25.2,0,330],["Aveia em flocos",66.6,13.9,8.5,9.1,394],
+  ["Açúcar refinado",99.5,0,0,0,387],["Tapioca (goma hidratada)",61.5,0,0,0.6,240],
+  ["Alface",1.7,1.3,0.2,1.8,11],["Tomate",3.1,1.1,0.2,1.2,15],
+  ["Cenoura crua",7.7,1.3,0.2,3.2,34],["Refrigerante cola",10.6,0,0,0,42],
+];
+function seedFoods(){
+  return SEED_FOODS.map(([name,c,p,f,fb,kcal])=>({
+    id:"seed-"+name.toLowerCase().replace(/[^a-z0-9]+/g,"-"),
+    name, brand:null, sourceName:"Demonstração", sourceId:null, barcode:null,
+    servingDescription:null, baseUnit:"g", gramsPerServing:null,
+    carbsPer100g:c, proteinPer100g:p, fatPer100g:f, fiberPer100g:fb, sugarPer100g:null,
+    caloriesPer100g:kcal, sodiumPer100g:null, confidenceScore:0.6, verified:false,
+    lastVerifiedAt:null, notes:"Valor aproximado para demonstração — verifique na TACO/TBCA.",
+  }));
+}
+const Providers = {
+  all(){ return [...seedFoods(), ...Store.load().foods]; },
+  search(query){
+    const q=(query||"").toLowerCase().trim();
+    const list=this.all();
+    if(!q) return list.slice(0,12);
+    return list.filter(f=>f.name.toLowerCase().includes(q)||(f.brand||"").toLowerCase().includes(q)).slice(0,20);
+  },
+  getById(id){ return this.all().find(f=>f.id===id)||null; },
+  // Adaptadores fase 2 (isolados, com fallback manual):
+  usda:{ available:!!window.__USDA_KEY, async search(){ throw new Error("USDA não configurado (defina API key)."); } },
+  brazilian:{ available:false, note:"Importar TACO/TBCA via CSV/JSON (fase 2)." },
+  barcode:{ available:false, async getByBarcode(){ throw new Error("Scanner não disponível no MVP."); } },
+};
+
+/* ============================================================
+   ESTADO DA UI
+   ============================================================ */
+let state = {
+  route:"dashboard",
+  histDays:7,
+  reportDays:7,
+  addTab:"buscar",
+  draft:null,        // refeição em montagem
+  detailMealId:null,
+};
+function S(){ return Store.load(); }
+function profile(){ return S().profile; }
+
+/* ============================================================
+   RENDER PRINCIPAL
+   ============================================================ */
+const VIEW = () => document.getElementById("view");
+function setTopDate(){ document.getElementById("topdate").textContent = cap(new Date().toLocaleDateString("pt-BR",{weekday:"short",day:"2-digit",month:"short"})); }
+
+function render(){
+  setTopDate();
+  if(!profile()){ renderOnboarding(); document.getElementById("nav").style.display="none"; return; }
+  document.getElementById("nav").style.display="flex";
+  renderNav();
+  const r=state.route;
+  if(r==="dashboard") renderDashboard();
+  else if(r==="add") renderAdd();
+  else if(r==="detail") renderMealDetail();
+  else if(r==="history") renderHistory();
+  else if(r==="reports") renderReports();
+  else if(r==="foods") renderFoods();
+  else if(r==="settings") renderSettings();
+  else renderDashboard();
+  window.scrollTo(0,0);
+}
+function go(route){ state.route=route; render(); }
+
+function renderNav(){
+  const items=[["dashboard","◧","Início"],["history","▤","Histórico"],["foods","▦","Banco"],["settings","⚙","Ajustes"]];
+  document.getElementById("nav").innerHTML = items.map(([r,ic,l])=>
+    `<button class="${state.route===r||(r==='history'&&state.route==='reports')?'on':''}" onclick="go('${r}')">
+       <span class="ic">${ic}</span>${l}</button>`).join("");
+}
+
+/* ---------- DASHBOARD ---------- */
+function dayMeals(key){ return S().meals.filter(m=>todayKey(m.eatenAt)===key).sort((a,b)=>a.eatenAt<b.eatenAt?1:-1); }
+function dayTotals(meals){ return meals.reduce((a,m)=>({
+  carbs:a.carbs+m.totalCarbs,protein:a.protein+m.totalProtein,fat:a.fat+m.totalFat,
+  fiber:a.fiber+m.totalFiber,cal:a.cal+m.totalCalories,
+}),{carbs:0,protein:0,fat:0,fiber:0,cal:0}); }
+
+function renderDashboard(){
+  const p=profile(), key=todayKey(), meals=dayMeals(key), t=dayTotals(meals);
+  const choices=round1(t.carbs/(p.preferredCarbChoiceGrams||15));
+  const gl=S().glucose.filter(g=>todayKey(g.measuredAt)===key).sort((a,b)=>a.measuredAt<b.measuredAt?1:-1);
+  const recents=recentFoods().slice(0,6);
+  const fav=S().favorites.slice(0,4);
+
+  const netLine = p.showNetCarbs ? `<span style="opacity:.85"> · líq. ${fmt(calculateNetCarbs(t.carbs,t.fiber))} g</span>` : "";
+
+  VIEW().innerHTML = `
+    <div class="eyebrow">Hoje · ${cap(new Date().toLocaleDateString("pt-BR",{weekday:"long"}))}</div>
+    <div class="hero">
+      <div class="lab">Carboidratos totais</div>
+      <div class="big num">${fmt(t.carbs)}<small>g</small></div>
+      <div class="sub">
+        <span><b class="num">${fmt(choices)}</b> escolhas</span>
+        <span><b class="num">${meals.length}</b> refeições</span>
+        <span>fibras <b class="num">${fmt(t.fiber)}</b> g${netLine}</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      ${mcard("Proteína",t.protein,"g")}
+      ${mcard("Gordura",t.fat,"g")}
+      ${mcard("Calorias",t.cal,"kcal")}
+    </div>
+
+    <div class="add-cta"><button class="btn btn-primary" onclick="startMeal()">＋ Adicionar refeição</button></div>
+
+    ${p.usesInsulin ? `<div class="alert info">💉 ${SAFETY.insulin}</div>`:""}
+
+    ${meals.length?`<div class="eyebrow">Refeições de hoje</div>${meals.map(mealRow).join("")}`
+      :`<div class="empty">Nenhuma refeição registrada hoje.<br>Toque em <b>Adicionar refeição</b> para começar.</div>`}
+
+    ${gl.length?`<div class="eyebrow">Glicemias de hoje</div>${gl.map(glucoseRow).join("")}`:""}
+
+    ${recents.length?`<div class="eyebrow">Alimentos recentes</div>
+      <div class="pillrow">${recents.map(f=>`<button class="quick" onclick="quickAddFromFood('${f.id}')">${esc(f.name)}</button>`).join("")}</div>`:""}
+
+    ${fav.length?`<div class="eyebrow">Favoritos</div>${fav.map(f=>
+      `<div class="item"><div class="grow"><div class="t">${esc(f.name)}</div><div class="d">refeição salva · ${f.mealTemplate.items.length} itens</div></div>
+       <button class="btn btn-ghost btn-sm" onclick="addFavorite('${f.id}')">Adicionar</button></div>`).join("")}`:""}
+
+    <div class="safety"><b>Lembrete:</b> ${SAFETY.base}</div>
+    <div class="footer-note">Conthay é um apoio de registro. Não calcula dose de insulina nem substitui avaliação profissional.</div>
+  `;
+}
+function mcard(k,v,u){ return `<div class="mcard"><div class="k">${k}</div><div class="v num">${fmt(v)}<span class="u">${u}</span></div></div>`; }
+function mealRow(m){
+  return `<div class="item" onclick="openMeal('${m.id}')">
+    <div class="grow">
+      <div class="t">${esc(m.name||MEAL_LABELS[m.mealType])} <span class="meal-pill">${MEAL_LABELS[m.mealType]}</span></div>
+      <div class="d">${new Date(m.eatenAt).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})} · ${m.items.length} itens · ${confTag(m.confidenceScore)}</div>
+    </div>
+    <div class="carb num">${fmt(m.totalCarbs)}<small>g carb</small></div>
+  </div>`;
+}
+function glucoseRow(g){
+  const tlabel={before_meal:"Antes da refeição",after_meal_2h:"2h após",after_meal_3h:"3h após",fasting:"Jejum",bedtime:"Ao deitar",other:"Outro"}[g.timing];
+  return `<div class="item"><div class="grow"><div class="t num">${fmt(g.value)} ${g.unit}</div>
+    <div class="d">${tlabel} · ${new Date(g.measuredAt).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</div></div>
+    <button class="back" onclick="deleteGlucose('${g.id}')" aria-label="Remover">×</button></div>`;
+}
+function recentFoods(){
+  const seen=new Set(), out=[];
+  const meals=[...S().meals].sort((a,b)=>a.eatenAt<b.eatenAt?1:-1);
+  for(const m of meals) for(const it of m.items){
+    if(!seen.has(it.foodId)){ seen.add(it.foodId); const f=Providers.getById(it.foodId); if(f) out.push(f); }
+  }
+  return out;
+}
+
+/* ============================================================
+   ONBOARDING (bloqueante + consentimento)
+   ============================================================ */
+function renderOnboarding(){
+  VIEW().innerHTML = `
+    <div style="padding-top:6px">
+      <div class="hero" style="background:linear-gradient(160deg,var(--ink),var(--teal-d))">
+        <div class="lab">Bem-vindo ao</div>
+        <div class="big" style="font-size:40px">Conthay</div>
+        <div class="sub"><span>Registre refeições, veja carboidratos, proteínas e gorduras — com fonte e confiança.</span></div>
+      </div>
+
+      <div class="alert info" style="margin-top:16px">
+        <b>Importante:</b> este app é um <b>apoio de registro</b>. Ele <b>não</b> diagnostica, não prescreve tratamento,
+        não sugere dose de insulina e não substitui orientação médica ou nutricional.
+      </div>
+
+      <div class="field"><label>Tipo de diabetes</label>
+        <select class="inp" id="ob-type">
+          <option value="type1">Tipo 1</option><option value="type2">Tipo 2</option>
+          <option value="gestational">Gestacional</option><option value="prediabetes">Pré-diabetes</option>
+          <option value="other">Outro</option><option value="unknown" selected>Prefiro não informar</option>
+        </select>
+      </div>
+
+      <div class="field"><label>Você usa insulina?</label>
+        <div class="seg" id="ob-insulin">
+          <button data-v="yes" onclick="segPick('ob-insulin',this)">Sim</button>
+          <button data-v="no" class="on" onclick="segPick('ob-insulin',this)">Não</button>
+        </div>
+      </div>
+
+      <div class="field"><label>Unidade de glicemia</label>
+        <div class="seg" id="ob-unit">
+          <button data-v="mg/dL" class="on" onclick="segPick('ob-unit',this)">mg/dL</button>
+          <button data-v="mmol/L" onclick="segPick('ob-unit',this)">mmol/L</button>
+        </div>
+      </div>
+
+      <div class="field"><label>Tamanho da escolha de carboidrato</label>
+        <input class="inp num" id="ob-choice" type="number" inputmode="decimal" value="15">
+        <div class="help">Padrão clínico comum: 15 g por escolha. Ajuste conforme seu plano.</div>
+      </div>
+
+      <hr class="sep">
+      <label class="check"><input type="checkbox" id="ob-consent">
+        Entendi a finalidade e concordo que meus dados ficam <b>salvos apenas neste dispositivo</b>.</label>
+
+      <div class="add-cta"><button class="btn btn-primary" onclick="finishOnboarding()">Começar</button></div>
+      <div class="footer-note">${SAFETY.base}</div>
+    </div>`;
+}
+function segPick(id,el){ [...document.getElementById(id).children].forEach(b=>b.classList.remove("on")); el.classList.add("on"); }
+function segVal(id){ const on=document.querySelector("#"+id+" .on"); return on?on.dataset.v:null; }
+function finishOnboarding(){
+  if(!document.getElementById("ob-consent").checked){ alert("Marque o consentimento para continuar."); return; }
+  const p={
+    id:uid(), name:null,
+    diabetesType:document.getElementById("ob-type").value,
+    usesInsulin:segVal("ob-insulin")==="yes", usesSulfonylurea:false,
+    preferredCarbChoiceGrams:Number(document.getElementById("ob-choice").value)||15,
+    glucoseUnit:segVal("ob-unit"),
+    dailyCarbTarget:null,dailyProteinTarget:null,dailyFatTarget:null,
+    showNetCarbs:false, locale:"pt-BR", privacyConsentAt:now(),
+  };
+  S().profile=p; Store.save(); Store.audit("onboarding_done"); go("dashboard");
+}
+
+/* ============================================================
+   ADICIONAR REFEIÇÃO
+   ============================================================ */
+function startMeal(){
+  state.draft={ id:uid(), name:null, eatenAt:now(), mealType:suggestMealType(), items:[], notes:"" };
+  state.addTab="buscar"; go("add");
+}
+function renderAdd(){
+  const d=state.draft;
+  const tt=calculateMealTotals(d.items, profile().preferredCarbChoiceGrams);
+  const tabs=[["buscar","Buscar"],["digitar","Digitar o que comi"],["manual","Manual"],["receita","Receita"]];
+
+  VIEW().innerHTML=`
+    <div class="pagehead"><button class="back" onclick="cancelMeal()">‹</button><h1>Adicionar refeição</h1></div>
+
+    <div class="field"><label>Tipo de refeição</label>
+      <div class="seg">
+        ${Object.keys(MEAL_LABELS).map(k=>`<button class="${d.mealType===k?'on':''}" onclick="setMealType('${k}')">${MEAL_LABELS[k]}</button>`).join("")}
+      </div>
+    </div>
+
+    <div class="tabs">
+      ${tabs.map(([k,l])=>`<button class="${state.addTab===k?'on':''}" onclick="setAddTab('${k}')">${l}</button>`).join("")}
+    </div>
+
+    <div id="addbody">${addTabBody()}</div>
+
+    ${d.items.length?`<div class="eyebrow">Itens da refeição</div>${d.items.map(draftItemRow).join("")}`:
+      `<div class="empty" style="margin-top:14px">Adicione o primeiro alimento acima.</div>`}
+
+    <div style="height:96px"></div>
+
+    ${d.items.length?`<div class="draftbar"><div class="inner">
+      <div class="tot"><div class="a">Total · ${fmt(tt.carbChoices)} escolhas</div><div class="b num">${fmt(tt.totalCarbs)} g carb</div></div>
+      <button class="btn btn-soft btn-sm" onclick="saveMeal()">Salvar refeição</button>
+    </div></div>`:""}
+  `;
+}
+function setMealType(k){ state.draft.mealType=k; render(); }
+function setAddTab(k){ state.addTab=k; document.getElementById("addbody").innerHTML=addTabBody(); if(k==="buscar")setTimeout(()=>document.getElementById("q")?.focus(),50); }
+
+function addTabBody(){
+  const t=state.addTab;
+  if(t==="buscar") return `
+    <div class="field"><input class="inp" id="q" placeholder="Buscar alimento (ex.: arroz, pão, frango)" oninput="doSearch()"></div>
+    <div id="results"></div>`;
+  if(t==="digitar") return `
+    <div class="field">
+      <textarea class="inp" id="nltext" placeholder="Ex.: 2 fatias de pão integral, 1 ovo e 1 xícara de arroz"></textarea>
+      <div class="help">Geramos itens <b>para você confirmar</b> — nada é salvo automaticamente.</div>
+      <div class="add-cta"><button class="btn btn-dark" onclick="parseNL()">Interpretar</button></div>
+    </div>
+    <div id="nlresults"></div>`;
+  if(t==="manual") return manualFoodForm();
+  if(t==="receita") return `<div class="alert info" style="margin-top:14px">Receitas: monte itens como em uma refeição e salve como <b>favorito</b> para reutilizar.
+     No MVP, use a aba <b>Manual</b> para cadastrar um prato pronto com macros por 100 g.</div>`;
+  return "";
+}
+function doSearch(){
+  const q=document.getElementById("q").value;
+  const res=Providers.search(q);
+  document.getElementById("results").innerHTML = res.length? res.map(foodResultRow).join("")
+    : `<div class="empty">Nenhum alimento. Cadastre na aba <b>Manual</b>.</div>`;
+}
+function foodResultRow(f){
+  return `<div class="item" onclick="openPortion('${f.id}')">
+    <div class="grow"><div class="t">${esc(f.name)}${f.brand?` · ${esc(f.brand)}`:""}</div>
+      <div class="d"><span class="chip">📚 ${esc(f.sourceName)}</span>${confTag(f.confidenceScore)}${f.verified?'<span class="chip">✓ verificado</span>':""}</div></div>
+    <div class="carb num">${fmt(f.carbsPer100g)}<small>g/100g</small></div>
+  </div>`;
+}
+
+/* ---- sheet de porção ---- */
+let portionCtx=null;
+function openPortion(foodId){
+  const f=Providers.getById(foodId);
+  portionCtx={ food:f, grams:f.gramsPerServing||100, confirmed:false };
+  const quicks=[20,50,100,150,200];
+  const M=document.getElementById("modal");
+  M.innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="sheet">
+    <div class="grab"></div>
+    <h2>${esc(f.name)}</h2>
+    <div class="d" style="display:flex;gap:8px;flex-wrap:wrap;margin:2px 0 6px"><span class="chip">📚 ${esc(f.sourceName)}</span>${confTag(f.confidenceScore)}</div>
+    <div class="field"><label>Quantidade (gramas)</label>
+      <input class="inp num" id="pg" type="number" inputmode="decimal" value="${portionCtx.grams}" oninput="updPortion()">
+      <div class="quick">${quicks.map(g=>`<button onclick="setGrams(${g})">${g} g</button>`).join("")}
+        ${f.gramsPerServing?`<button onclick="setGrams(${f.gramsPerServing})">1 porção</button>`:""}</div>
+    </div>
+    <div class="preview" id="ppv"></div>
+    ${f.sourceName==="Demonstração"||!f.verified?`<div class="alert warn">⚠️ ${SAFETY.estimate}</div>`:""}
+    <label class="check"><input type="checkbox" id="pconf" ${f.verified?'checked':''}> Confirmo a porção e os valores deste item.</label>
+    <div class="add-cta"><button class="btn btn-primary" onclick="addPortion()">Adicionar à refeição</button></div>
+  </div></div>`;
+  updPortion();
+}
+function setGrams(g){ document.getElementById("pg").value=g; updPortion(); }
+function updPortion(){
+  const g=Number(document.getElementById("pg").value)||0; portionCtx.grams=g;
+  const m=calculateItemMacros(portionCtx.food,g);
+  document.getElementById("ppv").innerHTML=`
+    <div class="p"><div class="pk">Carboidrato</div><div class="pv num">${fmt(m.carbs)} g</div></div>
+    <div class="p"><div class="pk">Proteína</div><div class="pv num">${fmt(m.protein)} g</div></div>
+    <div class="p"><div class="pk">Gordura</div><div class="pv num">${fmt(m.fat)} g</div></div>`;
+}
+function addPortion(){
+  const f=portionCtx.food, g=portionCtx.grams;
+  const confirmed=document.getElementById("pconf").checked;
+  if((f.sourceName==="Demonstração"||!f.verified) && !confirmed){ alert("Confirme a porção e os valores para adicionar (dado estimado)."); return; }
+  const m=calculateItemMacros(f,g);
+  state.draft.items.push({
+    id:uid(), foodId:f.id, foodNameSnapshot:f.name, quantity:g, unit:"g", gramsEquivalent:g,
+    carbs:m.carbs, protein:m.protein, fat:m.fat, fiber:m.fiber, calories:m.calories,
+    sourceName:f.sourceName, confidenceScore:f.confidenceScore, userConfirmed:confirmed,
+  });
+  closeModal(); render();
+}
+function draftItemRow(it,i){
+  return `<div class="item">
+    <div class="grow"><div class="t">${esc(it.foodNameSnapshot)}</div>
+      <div class="d">${fmt(it.gramsEquivalent)} g · ${it.userConfirmed?'<span class="chip">✓ confirmado</span>':'<span class="conf l">○ a confirmar</span>'}</div></div>
+    <div class="carb num">${fmt(it.carbs)}<small>g carb</small></div>
+    <button class="back" onclick="removeDraftItem(${i})" aria-label="Remover">×</button>
+  </div>`;
+}
+function removeDraftItem(i){ state.draft.items.splice(i,1); render(); }
+
+/* parser NL */
+function parseNL(){
+  const text=document.getElementById("nltext").value;
+  const items=naturalLanguageMealParser(text, Providers.all());
+  document.getElementById("nlresults").innerHTML = items.length? `
+    <div class="eyebrow">Confirme cada item</div>
+    ${items.map((it,i)=>`<div class="item">
+      <div class="grow"><div class="t">${esc(it.name)} <span class="chip">${fmt(it.qty)} ${it.unit}</span></div>
+        <div class="d">${it.match?`→ ${esc(it.match.name)} · ${confTag(it.match.confidenceScore)}`:'<span class="conf l">○ não encontrado — cadastre manual</span>'}</div></div>
+      ${it.match?`<button class="btn btn-ghost btn-sm" onclick="confirmNL(${i})">Ajustar</button>`:""}
+    </div>`).join("")}` : `<div class="empty">Não entendi os itens. Tente: "2 fatias de pão, 1 ovo".</div>`;
+  window.__nlItems=items;
+}
+function confirmNL(i){
+  const it=window.__nlItems[i]; if(!it.match) return;
+  const conv=convertPortionToGrams(it.match,it.qty,it.unit);
+  openPortion(it.match.id);
+  setTimeout(()=>{ const el=document.getElementById("pg"); if(el){ el.value=round1(conv.grams); updPortion(); } },60);
+}
+
+/* salvar refeição */
+function saveMeal(){
+  const d=state.draft;
+  if(!d.items.length) return;
+  const t=calculateMealTotals(d.items, profile().preferredCarbChoiceGrams);
+  const meal={ ...d, totalCarbs:t.totalCarbs,totalProtein:t.totalProtein,totalFat:t.totalFat,
+    totalFiber:t.totalFiber,totalCalories:t.totalCalories,carbChoices:t.carbChoices,
+    confidenceScore:t.confidenceScore, userId:profile().id };
+  S().meals.push(meal); Store.save(); Store.audit("meal_saved");
+  state.draft=null; state.detailMealId=meal.id; go("detail");
+  // oferecer salvar como favorito
+  setTimeout(()=>offerFavorite(meal),250);
+}
+function cancelMeal(){ state.draft=null; go("dashboard"); }
+
+function quickAddFromFood(foodId){ startMeal(); setTimeout(()=>openPortion(foodId),60); }
+
+/* favoritos */
+function offerFavorite(meal){
+  const M=document.getElementById("modal");
+  M.innerHTML=`<div class="overlay center" onclick="if(event.target===this)closeModal()"><div class="sheet card">
+    <h2>Salvar como favorito?</h2>
+    <p class="muted" style="font-size:14px">Reutilize esta combinação com um toque no painel.</p>
+    <div class="field"><input class="inp" id="favname" placeholder="Nome (ex.: Café da manhã padrão)" value="${esc(meal.name||MEAL_LABELS[meal.mealType])}"></div>
+    <div class="row"><button class="btn btn-ghost" onclick="closeModal()">Agora não</button>
+    <button class="btn btn-primary" onclick="saveFavorite('${meal.id}')">Salvar favorito</button></div>
+  </div></div>`;
+}
+function saveFavorite(mealId){
+  const m=S().meals.find(x=>x.id===mealId); if(!m) return closeModal();
+  const name=document.getElementById("favname").value.trim()||MEAL_LABELS[m.mealType];
+  S().favorites.push({ id:uid(), userId:profile().id, name, mealTemplate:{ mealType:m.mealType, items:m.items.map(it=>({...it,id:uid()})) } });
+  Store.save(); closeModal(); render();
+}
+function addFavorite(favId){
+  const f=S().favorites.find(x=>x.id===favId); if(!f) return;
+  startMeal();
+  state.draft.mealType=f.mealTemplate.mealType;
+  state.draft.items=f.mealTemplate.items.map(it=>({...it,id:uid()}));
+  render();
+}
+
+/* ============================================================
+   DETALHE DA REFEIÇÃO
+   ============================================================ */
+function openMeal(id){ state.detailMealId=id; go("detail"); }
+function renderMealDetail(){
+  const m=S().meals.find(x=>x.id===state.detailMealId);
+  if(!m){ go("dashboard"); return; }
+  const p=profile();
+  const linked=S().glucose.filter(g=>g.relatedMealId===m.id);
+  const net=p.showNetCarbs?` · líq. ${fmt(calculateNetCarbs(m.totalCarbs,m.totalFiber))} g`:"";
+  VIEW().innerHTML=`
+    <div class="pagehead"><button class="back" onclick="go('dashboard')">‹</button><h1>${esc(m.name||MEAL_LABELS[m.mealType])}</h1></div>
+    <div class="muted" style="font-size:13px;margin:2px 2px 8px">${MEAL_LABELS[m.mealType]} · ${new Date(m.eatenAt).toLocaleString("pt-BR",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
+
+    <div class="hero">
+      <div class="lab">Carboidratos totais</div>
+      <div class="big num">${fmt(m.totalCarbs)}<small>g</small></div>
+      <div class="sub"><span><b class="num">${fmt(m.carbChoices)}</b> escolhas</span>
+        <span>fibras <b class="num">${fmt(m.totalFiber)}</b> g${net}</span><span>${confTag(m.confidenceScore)}</span></div>
+    </div>
+    <div class="grid">${mcard("Proteína",m.totalProtein,"g")}${mcard("Gordura",m.totalFat,"g")}${mcard("Calorias",m.totalCalories,"kcal")}</div>
+
+    <div class="eyebrow">Itens</div>
+    ${m.items.map(it=>`<div class="item"><div class="grow"><div class="t">${esc(it.foodNameSnapshot)}</div>
+      <div class="d">${fmt(it.gramsEquivalent)} g · <span class="chip">📚 ${esc(it.sourceName)}</span>${confTag(it.confidenceScore)}</div></div>
+      <div class="carb num">${fmt(it.carbs)}<small>g carb</small></div></div>`).join("")}
+
+    <div class="eyebrow">Glicemia</div>
+    <div class="row">
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openGlucose('${m.id}','before_meal')">Registrar antes</button>
+      <button class="btn btn-ghost btn-sm" style="flex:1" onclick="openGlucose('${m.id}','after_meal_2h')">Registrar 2h depois</button>
+    </div>
+    ${linked.length?linked.map(glucoseRow).join(""):'<div class="help" style="margin-top:8px">Registre antes e 2–3h após para acompanhar a resposta.</div>'}
+
+    <div class="eyebrow">Observações</div>
+    <textarea class="inp" id="mnotes" placeholder="Anotações (opcional)" oninput="saveMealNotes('${m.id}')">${esc(m.notes||"")}</textarea>
+
+    ${p.usesInsulin?`<div class="alert info" style="margin-top:12px">💉 ${SAFETY.insulin}</div>`:""}
+    <div class="alert info" style="font-weight:500">ℹ️ Gordura e proteína podem alterar a resposta glicêmica ao longo das horas seguintes.</div>
+
+    <hr class="sep">
+    <button class="btn btn-ghost danger" onclick="deleteMeal('${m.id}')">Excluir refeição</button>
+    <div class="footer-note">${SAFETY.base}</div>
+  `;
+}
+function saveMealNotes(id){ const m=S().meals.find(x=>x.id===id); if(m){ m.notes=document.getElementById("mnotes").value; Store.save(); } }
+function deleteMeal(id){ if(!confirm("Excluir esta refeição?"))return; S().meals=S().meals.filter(m=>m.id!==id); S().glucose=S().glucose.map(g=>g.relatedMealId===id?{...g,relatedMealId:null}:g); Store.save(); go("dashboard"); }
+
+/* glicemia */
+function openGlucose(mealId,timing){
+  const p=profile();
+  const M=document.getElementById("modal");
+  M.innerHTML=`<div class="overlay center" onclick="if(event.target===this)closeModal()"><div class="sheet card">
+    <h2>Registrar glicemia</h2>
+    <div class="field"><label>Valor (${p.glucoseUnit})</label>
+      <input class="inp num" id="gval" type="number" inputmode="decimal" placeholder="ex.: ${p.glucoseUnit==='mg/dL'?'110':'6.1'}"></div>
+    <div class="field"><label>Momento</label>
+      <select class="inp" id="gtiming">
+        ${Object.entries({before_meal:"Antes da refeição",after_meal_2h:"2h após",after_meal_3h:"3h após",fasting:"Jejum",bedtime:"Ao deitar",other:"Outro"})
+          .map(([v,l])=>`<option value="${v}" ${v===timing?'selected':''}>${l}</option>`).join("")}</select></div>
+    <div id="gwarn"></div>
+    <div class="row"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveGlucose('${mealId||''}')">Salvar</button></div>
+  </div></div>`;
+  document.getElementById("gval").addEventListener("input",checkGlucoseWarn);
+}
+function isExtremeGlucose(v,unit){ return unit==="mg/dL" ? (v<70||v>250) : (v<3.9||v>13.9); }
+function checkGlucoseWarn(){
+  const p=profile(), v=Number(document.getElementById("gval").value);
+  document.getElementById("gwarn").innerHTML = (v && isExtremeGlucose(v,p.glucoseUnit))
+    ? `<div class="alert bad">⚠️ ${SAFETY.glucoseExtreme}</div>` : "";
+}
+function saveGlucose(mealId){
+  const p=profile(), v=Number(document.getElementById("gval").value);
+  if(!v){ alert("Informe o valor."); return; }
+  S().glucose.push({ id:uid(), userId:p.id, value:round1(v), unit:p.glucoseUnit, measuredAt:now(),
+    timing:document.getElementById("gtiming").value, relatedMealId:mealId||null, notes:null });
+  Store.save(); Store.audit("glucose_saved"); closeModal(); render();
+}
+function deleteGlucose(id){ S().glucose=S().glucose.filter(g=>g.id!==id); Store.save(); render(); }
+
+/* ============================================================
+   HISTÓRICO
+   ============================================================ */
+function renderHistory(){
+  const days=state.histDays;
+  const since=Date.now()-days*864e5;
+  const meals=S().meals.filter(m=>new Date(m.eatenAt).getTime()>=since);
+  // carbo por dia
+  const byDay={};
+  for(let i=days-1;i>=0;i--){ const k=todayKey(new Date(Date.now()-i*864e5)); byDay[k]=0; }
+  meals.forEach(m=>{ const k=todayKey(m.eatenAt); if(k in byDay) byDay[k]+=m.totalCarbs; });
+  const max=Math.max(1,...Object.values(byDay));
+  const glAll=S().glucose.filter(g=>new Date(g.measuredAt).getTime()>=since).sort((a,b)=>a.measuredAt<b.measuredAt?1:-1);
+
+  // refeições com maior carga
+  const top=[...meals].sort((a,b)=>b.totalCarbs-a.totalCarbs).slice(0,5);
+
+  VIEW().innerHTML=`
+    <div class="pagehead"><h1>Histórico</h1></div>
+    <div class="seg" style="margin-top:6px">${[7,14,30,90].map(d=>`<button class="${days===d?'on':''}" onclick="setHist(${d})">${d}d</button>`).join("")}</div>
+
+    <div class="eyebrow">Carboidratos por dia (g)</div>
+    <div class="bars">${Object.entries(byDay).slice(-Math.min(days,30)).map(([k,v])=>`
+      <div class="col"><div class="bv num">${v?Math.round(v):""}</div>
+        <div class="bar" style="height:${Math.round(v/max*100)}%"></div>
+        <div class="bl">${new Date(k+"T12:00").toLocaleDateString("pt-BR",{day:"2-digit",month:days>14?"numeric":"short"})}</div></div>`).join("")}</div>
+    ${days>30?'<div class="help">Mostrando os últimos 30 dias no gráfico.</div>':""}
+
+    ${top.length?`<div class="eyebrow">Refeições com maior carga de carboidrato</div>
+      ${top.map(mealRow).join("")}`:""}
+
+    <div class="eyebrow">Glicemias (antes/depois)</div>
+    ${glAll.length?glAll.slice(0,20).map(glucoseRow).join(""):'<div class="empty">Sem registros no período.</div>'}
+
+    <div class="add-cta"><button class="btn btn-dark" onclick="go('reports')">Ver relatórios e exportar</button></div>
+    <div class="footer-note">${SAFETY.base}</div>
+  `;
+}
+function setHist(d){ state.histDays=d; render(); }
+
+/* ============================================================
+   RELATÓRIOS
+   ============================================================ */
+function renderReports(){
+  const days=state.reportDays, since=Date.now()-days*864e5;
+  const meals=S().meals.filter(m=>new Date(m.eatenAt).getTime()>=since);
+  const t=dayTotals(meals);
+  const nDays=Math.max(1,new Set(meals.map(m=>todayKey(m.eatenAt))).size);
+  const gl=S().glucose.filter(g=>new Date(g.measuredAt).getTime()>=since);
+  const glAvg=gl.length?round1(gl.reduce((s,g)=>s+g.value,0)/gl.length):null;
+
+  VIEW().innerHTML=`
+    <div class="pagehead"><button class="back" onclick="go('history')">‹</button><h1>Relatórios</h1></div>
+    <div class="seg" style="margin-top:6px">${[7,14,30,90].map(d=>`<button class="${days===d?'on':''}" onclick="setReport(${d})">${d}d</button>`).join("")}</div>
+
+    <div class="eyebrow">Resumo de ${days} dias</div>
+    <div class="mcard" style="padding:14px">
+      <div class="kv"><span class="kk">Refeições registradas</span><span class="vv num">${meals.length}</span></div>
+      <div class="kv"><span class="kk">Dias com registro</span><span class="vv num">${nDays}</span></div>
+      <div class="kv"><span class="kk">Carboidratos (total)</span><span class="vv num">${fmt(t.carbs)} g</span></div>
+      <div class="kv"><span class="kk">Média de carbo/dia</span><span class="vv num">${fmt(t.carbs/nDays)} g</span></div>
+      <div class="kv"><span class="kk">Proteína (total)</span><span class="vv num">${fmt(t.protein)} g</span></div>
+      <div class="kv"><span class="kk">Gordura (total)</span><span class="vv num">${fmt(t.fat)} g</span></div>
+      <div class="kv"><span class="kk">Fibras (total)</span><span class="vv num">${fmt(t.fiber)} g</span></div>
+      <div class="kv"><span class="kk">Glicemias registradas</span><span class="vv num">${gl.length}</span></div>
+      ${glAvg!=null?`<div class="kv"><span class="kk">Média glicemia</span><span class="vv num">${fmt(glAvg)} ${profile().glucoseUnit}</span></div>`:""}
+    </div>
+
+    <div class="alert info" style="margin-top:14px">📤 Exporte e <b>compartilhe com seu profissional de saúde</b>.</div>
+    <div class="row"><button class="btn btn-ghost" onclick="exportCSV(${days})">Exportar CSV</button>
+      <button class="btn btn-ghost" onclick="exportJSON(${days})">Exportar JSON</button></div>
+    <div class="help" style="text-align:center;margin-top:8px">PDF: use “Imprimir → Salvar como PDF” no navegador (exportação PDF dedicada na fase 2).</div>
+    <div class="footer-note">${SAFETY.base}</div>
+  `;
+}
+function setReport(d){ state.reportDays=d; render(); }
+function download(name,content,type){
+  const blob=new Blob([content],{type}); const url=URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url);
+}
+function exportCSV(days){
+  const since=Date.now()-days*864e5;
+  const meals=S().meals.filter(m=>new Date(m.eatenAt).getTime()>=since);
+  const rows=[["data_hora","refeicao","item","gramas","carb_g","prot_g","gord_g","fibra_g","kcal","fonte","confianca"]];
+  meals.forEach(m=>m.items.forEach(it=>rows.push([
+    new Date(m.eatenAt).toLocaleString("pt-BR"), MEAL_LABELS[m.mealType], it.foodNameSnapshot,
+    it.gramsEquivalent, it.carbs, it.protein, it.fat, it.fiber, it.calories, it.sourceName, it.confidenceScore
+  ])));
+  rows.push([]); rows.push(["GLICEMIAS"]); rows.push(["data_hora","valor","unidade","momento"]);
+  S().glucose.filter(g=>new Date(g.measuredAt).getTime()>=since).forEach(g=>rows.push([
+    new Date(g.measuredAt).toLocaleString("pt-BR"), g.value, g.unit, g.timing]));
+  const csv=rows.map(r=>r.map(c=>`"${String(c??"").replace(/"/g,'""')}"`).join(";")).join("\n");
+  download(`conthay_${days}d.csv`,"\uFEFF"+csv,"text/csv;charset=utf-8");
+}
+function exportJSON(days){
+  const since=Date.now()-days*864e5;
+  const data={ exportedAt:now(), periodDays:days,
+    profile:{ diabetesType:profile().diabetesType, usesInsulin:profile().usesInsulin, glucoseUnit:profile().glucoseUnit, preferredCarbChoiceGrams:profile().preferredCarbChoiceGrams },
+    meals:S().meals.filter(m=>new Date(m.eatenAt).getTime()>=since),
+    glucose:S().glucose.filter(g=>new Date(g.measuredAt).getTime()>=since) };
+  download(`conthay_${days}d.json`,JSON.stringify(data,null,2),"application/json");
+}
+
+/* ============================================================
+   BANCO DE ALIMENTOS
+   ============================================================ */
+function renderFoods(){
+  const custom=S().foods;
+  VIEW().innerHTML=`
+    <div class="pagehead"><h1>Banco de alimentos</h1></div>
+    <div class="add-cta"><button class="btn btn-primary" onclick="openFoodForm()">＋ Cadastrar alimento</button></div>
+
+    <div class="eyebrow">Meus alimentos (${custom.length})</div>
+    ${custom.length?custom.map(f=>`<div class="item">
+      <div class="grow"><div class="t">${esc(f.name)}${f.brand?` · ${esc(f.brand)}`:""}</div>
+        <div class="d"><span class="chip">📚 ${esc(f.sourceName)}</span>${confTag(f.confidenceScore)}${f.verified?'<span class="chip">✓ verificado</span>':'<span class="conf l">○ não verificado</span>'}</div></div>
+      <div class="carb num">${fmt(f.carbsPer100g)}<small>g/100g</small></div>
+      <button class="back" onclick="openFoodForm('${f.id}')" aria-label="Editar">✎</button>
+    </div>`).join(""):'<div class="empty">Você ainda não cadastrou alimentos.<br>Útil para receitas caseiras e rótulos.</div>'}
+
+    <div class="eyebrow">Alimentos de demonstração</div>
+    <div class="help" style="margin-top:0">${SEED_FOODS.length} itens com <b>valores aproximados</b> para teste. Verifique na TACO/TBCA antes de uso clínico.</div>
+    <div class="footer-note">${SAFETY.base}</div>
+  `;
+}
+function manualFoodForm(food){
+  food=food||{};
+  return `<div class="field"><label>Nome do alimento</label><input class="inp" id="f-name" value="${esc(food.name||"")}" placeholder="ex.: Pão caseiro"></div>
+    <div class="field"><label>Marca (opcional)</label><input class="inp" id="f-brand" value="${esc(food.brand||"")}"></div>
+    <div class="field"><label>Por 100 g/ml — preencha os que tiver</label>
+      <div class="grid" style="grid-template-columns:1fr 1fr">
+        <input class="inp num" id="f-carb" type="number" inputmode="decimal" placeholder="Carb (g)" value="${food.carbsPer100g??""}">
+        <input class="inp num" id="f-prot" type="number" inputmode="decimal" placeholder="Proteína (g)" value="${food.proteinPer100g??""}">
+        <input class="inp num" id="f-fat" type="number" inputmode="decimal" placeholder="Gordura (g)" value="${food.fatPer100g??""}">
+        <input class="inp num" id="f-fiber" type="number" inputmode="decimal" placeholder="Fibra (g)" value="${food.fiberPer100g??""}">
+        <input class="inp num" id="f-kcal" type="number" inputmode="decimal" placeholder="Calorias (kcal)" value="${food.caloriesPer100g??""}">
+        <input class="inp num" id="f-gps" type="number" inputmode="decimal" placeholder="g por porção" value="${food.gramsPerServing??""}">
+      </div></div>
+    <label class="check"><input type="checkbox" id="f-verified" ${food.verified?'checked':''}> Marcar como verificado (conferi a fonte).</label>
+    <div class="add-cta"><button class="btn btn-primary" onclick="saveFood('${food.id||""}')">Salvar alimento</button></div>`;
+}
+function openFoodForm(id){
+  const food=id?S().foods.find(f=>f.id===id):null;
+  const M=document.getElementById("modal");
+  M.innerHTML=`<div class="overlay" onclick="if(event.target===this)closeModal()"><div class="sheet">
+    <div class="grab"></div><h2>${id?"Editar alimento":"Cadastrar alimento"}</h2>
+    ${manualFoodForm(food)}
+    ${id?`<button class="btn btn-ghost danger" style="margin-top:10px" onclick="deleteFood('${id}')">Excluir alimento</button>`:""}
+  </div></div>`;
+}
+function numOrNull(id){ const v=document.getElementById(id).value; return v===""?null:Number(v); }
+function saveFood(id){
+  const name=document.getElementById("f-name").value.trim();
+  if(!name){ alert("Informe o nome."); return; }
+  const verified=document.getElementById("f-verified").checked;
+  const base={
+    name, brand:document.getElementById("f-brand").value.trim()||null,
+    sourceName:"Meu cadastro", baseUnit:"g",
+    carbsPer100g:numOrNull("f-carb")||0, proteinPer100g:numOrNull("f-prot")||0,
+    fatPer100g:numOrNull("f-fat")||0, fiberPer100g:numOrNull("f-fiber"),
+    caloriesPer100g:numOrNull("f-kcal"), gramsPerServing:numOrNull("f-gps"),
+    sugarPer100g:null, sodiumPer100g:null, barcode:null, servingDescription:null,
+    confidenceScore: verified?0.9:0.6, verified, lastVerifiedAt: verified?now():null, notes:null,
+  };
+  if(id){ const f=S().foods.find(x=>x.id===id); Object.assign(f,base); }
+  else { S().foods.push({ id:uid(), ...base }); }
+  Store.save(); Store.audit("food_saved"); closeModal();
+  if(state.draft && state.addTab==="manual"){ /* recém-cadastrado some do form */ }
+  render();
+}
+function deleteFood(id){ if(!confirm("Excluir este alimento?"))return; S().foods=S().foods.filter(f=>f.id!==id); Store.save(); closeModal(); render(); }
+
+/* ============================================================
+   CONFIGURAÇÕES
+   ============================================================ */
+function renderSettings(){
+  const p=profile();
+  VIEW().innerHTML=`
+    <div class="pagehead"><h1>Ajustes</h1></div>
+
+    <div class="eyebrow">Perfil</div>
+    <div class="field"><label>Tipo de diabetes</label>
+      <select class="inp" id="s-type" onchange="saveSettings()">
+        ${Object.entries({type1:"Tipo 1",type2:"Tipo 2",gestational:"Gestacional",prediabetes:"Pré-diabetes",other:"Outro",unknown:"Prefiro não informar"})
+          .map(([v,l])=>`<option value="${v}" ${p.diabetesType===v?'selected':''}>${l}</option>`).join("")}</select></div>
+    <label class="check"><input type="checkbox" id="s-insulin" ${p.usesInsulin?'checked':''} onchange="saveSettings()"> Uso insulina</label>
+
+    <div class="eyebrow">Glicemia & carboidrato</div>
+    <div class="field"><label>Unidade de glicemia</label>
+      <div class="seg" id="s-unit">
+        <button data-v="mg/dL" class="${p.glucoseUnit==='mg/dL'?'on':''}" onclick="segPick('s-unit',this);saveSettings()">mg/dL</button>
+        <button data-v="mmol/L" class="${p.glucoseUnit==='mmol/L'?'on':''}" onclick="segPick('s-unit',this);saveSettings()">mmol/L</button>
+      </div></div>
+    <div class="field"><label>Tamanho da escolha de carboidrato (g)</label>
+      <input class="inp num" id="s-choice" type="number" inputmode="decimal" value="${p.preferredCarbChoiceGrams}" onchange="saveSettings()"></div>
+    <label class="check"><input type="checkbox" id="s-net" ${p.showNetCarbs?'checked':''} onchange="saveSettings()">
+      Mostrar carboidratos líquidos (secundário) — carbo total continua sendo o principal.</label>
+
+    <div class="eyebrow">Metas diárias (opcional)</div>
+    <div class="grid">
+      <input class="inp num" id="s-tc" type="number" inputmode="decimal" placeholder="Carb (g)" value="${p.dailyCarbTarget??""}" onchange="saveSettings()">
+      <input class="inp num" id="s-tp" type="number" inputmode="decimal" placeholder="Prot (g)" value="${p.dailyProteinTarget??""}" onchange="saveSettings()">
+      <input class="inp num" id="s-tf" type="number" inputmode="decimal" placeholder="Gord (g)" value="${p.dailyFatTarget??""}" onchange="saveSettings()">
+    </div>
+
+    <div class="eyebrow">Calculadora de bolus</div>
+    <div class="alert warn">🔒 Desativada por padrão. Cálculo de dose de insulina <b>não</b> faz parte deste MVP — exigiria validação clínica, revisão regulatória, testes, auditoria e configuração por profissional habilitado.</div>
+
+    <div class="eyebrow">Privacidade & dados</div>
+    <div class="safety"><b>Local-first:</b> seus dados ficam apenas neste dispositivo/navegador. Nada é enviado a terceiros.</div>
+    <div class="row" style="margin-top:12px"><button class="btn btn-ghost" onclick="exportJSON(3650)">Exportar tudo</button>
+      <button class="btn btn-ghost danger" onclick="wipeAll()">Apagar todos os dados</button></div>
+
+    <div class="footer-note">${SAFETY.base}<br>Conthay não é aprovado por órgão regulador e não trata diabetes.</div>
+  `;
+}
+function saveSettings(){
+  const p=profile();
+  p.diabetesType=document.getElementById("s-type").value;
+  p.usesInsulin=document.getElementById("s-insulin").checked;
+  p.glucoseUnit=segVal("s-unit")||p.glucoseUnit;
+  p.preferredCarbChoiceGrams=Number(document.getElementById("s-choice").value)||15;
+  p.showNetCarbs=document.getElementById("s-net").checked;
+  p.dailyCarbTarget=numOrNull("s-tc"); p.dailyProteinTarget=numOrNull("s-tp"); p.dailyFatTarget=numOrNull("s-tf");
+  Store.save();
+}
+function wipeAll(){
+  if(!confirm("Apagar TODOS os dados (refeições, glicemias, alimentos e perfil)? Isso não pode ser desfeito.")) return;
+  if(!confirm("Confirma? Esta ação é definitiva.")) return;
+  Store.reset(); state={route:"dashboard",histDays:7,reportDays:7,addTab:"buscar",draft:null,detailMealId:null};
+  render();
+}
+
+/* ---------- modal helpers ---------- */
+function closeModal(){ document.getElementById("modal").innerHTML=""; }
+
+/* ---------- BOOT ---------- */
+render();
+
+/* ---------- expor funções de cálculo p/ teste/console (não loga dados sensíveis) ---------- */
+window.Conthay={ calculateItemMacros, calculateMealTotals, calculateNetCarbs, convertPortionToGrams, naturalLanguageMealParser };
+</script>
+</body>
+</html>
